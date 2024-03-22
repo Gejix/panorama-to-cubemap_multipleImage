@@ -190,7 +190,11 @@ function renderFace({data: readData, face, rotation, interpolation, maxWidth = I
     }
   }
 
-  postMessage(writeData);
+//   postMessage(writeData);
+// 
+// Inside renderFace function, before posting the message back
+postMessage({ imageData: writeData, filename: data.filename });
+
 }
 
 onmessage = function({data}) {
