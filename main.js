@@ -101,24 +101,53 @@ const facePositions = {
 };
 
 function loadImage() {
-  const file = dom.imageInput.files[0];
+  const file = dom.imageInput.files;
+  // const file = dom.imageInput.files[0];
 
-  if (!file) {
+  if (!file.length) {
     return;
   }
 
-  const img = new Image();
+//   const img = new Image();
 
-  img.src = URL.createObjectURL(file);
+//   img.src = URL.createObjectURL(file);
 
-  img.addEventListener('load', () => {
-    const {width, height} = img;
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(img, 0, 0);
-    const data = ctx.getImageData(0, 0, width, height);
+//   img.addEventListener('load', () => {
+//     const {width, height} = img;
+//     canvas.width = width;
+//     canvas.height = height;
+//     ctx.drawImage(img, 0, 0);
+//     const data = ctx.getImageData(0, 0, width, height);
 
-    processImage(data);
+//     processImage(data);
+//   });
+// }
+ let processedFiles = 0;
+  const zip = new JSZip();
+
+  for (const file of files) {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.addEventListener('load', () => {
+      const {width, height} = img;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, width, height);
+
+      processImage(data, file.name, zip).then(() => {
+        processedFiles++;
+        if (processedFiles === files.length) {
+          finalizeZip(zip);
+        }
+      });
+    });
+  }
+}
+
+function finalizeZip(zip) {
+  zip.generateAsync({type:"blob"}).then(function(content) {
+    saveAs(content, "cubemaps.zip");
   });
 }
 
