@@ -203,7 +203,10 @@ function renderFace(data, faceName, position) {
       .then(url => face.setPreview(url, x, y));
 
     worker.onmessage = setDownload;
-    worker.postMessage(options);
+    // worker.postMessage(options);
+    // When posting data to the worker, include an identifier or filename
+    worker.postMessage({ ...options, filename: file.name });
+
   };
 
   worker.onmessage = setPreview;
