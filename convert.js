@@ -157,8 +157,9 @@ const orientations = {
 };
 
 // Main function to render a face of the cube
-function renderFace({imageData, face, rotation, interpolation, originalName}) {
+function renderFace({imageData, face, rotation, interpolation, originalName, maxWidth}) {
 
+  const maxWidth = maxWidth || 1024; // Define maxWidth directly if it's constant
   const faceWidth = Math.min(maxWidth, readData.width / 4);
   const faceHeight = faceWidth;
 
@@ -194,7 +195,7 @@ function renderFace({imageData, face, rotation, interpolation, originalName}) {
 }
 
 // Event listener for messages from the main thread
-self.addEventListener('message', async (event) => {
+self.addEventListener('message', (event) => {
     const { imageData, face, rotation, interpolation, originalName, maxWidth} = event.data;
     console.log(`Received request to process face ${face} for ${originalName} with rotation ${rotation}`);
 
