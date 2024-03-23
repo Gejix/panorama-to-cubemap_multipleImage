@@ -160,9 +160,10 @@ const orientations = {
 function renderFace({imageData, face, rotation, interpolation, originalName, maxWidth}) {
 
   maxWidth = maxWidth || 1024; // Define maxWidth directly if it's constant
+  const readData = imageData;
   const faceWidth = Math.min(maxWidth, readData.width / 4);
   const faceHeight = faceWidth;
-
+  
   const cube = {};
   const orientation = orientations[face];
 
