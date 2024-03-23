@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 faces.forEach(face => {
                     worker.postMessage({
                         imageData: imageData,
-                        rotation:0,
+                        rotation: 180,
                         face: face,
                         interpolation: 'lanczos',
                         originalName: file.name.split('.')[0],
