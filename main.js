@@ -5,15 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleFiles() {
         const files = Array.from(imageInput.files);
         const zip = new JSZip();
-        const worker = new Worker('convert.js');
-
         let processedCount = 0;
         const totalFaces = files.length * 6; // Assuming 6 faces per cube map
 
+        const worker = new Worker('convert.js');
         worker.onmessage = function(event) {
-            const { processedData, face, originalName } = event.data;
-            // Add processed data to zip
-            zip.file(`${originalName}_${face}.jpeng`, processedData, {binary: true});
+            const { processedData, face, originalName, operation } = event.data;
+            console.log(processedData); // For debugging
+
+            // Add processed data to zip. Assuming processedData is a Blob or similar.
+            // Note: The typo 'jpeng' corrected to 'jpeg'
+            zip.file(`${originalName}_${face}.jpeg`, processedData, {binary: true});
 
             processedCount++;
             if (processedCount === totalFaces) {
@@ -27,18 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
         files.forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
+                // Assuming the reader reads as DataURL. You might need to adjust based on your processing logic.
                 const imageData = e.target.result;
                 const faces = ['px', 'nx', 'py', 'ny', 'pz', 'nz'];
                 faces.forEach(face => {
                     worker.postMessage({
                         imageData: imageData,
                         face: face,
-                        originalName: file.name.split('.')[0], // Assuming file name has a single dot for extension
+                        originalName: file.name.split('.')[0],
                         operation: 'processFace'
                     });
                 });
             };
-            reader.readAsDataURL(file); // Or readAsArrayBuffer if processing binary data in worker
+            reader.readAsDataURL(file); // Consider readAsArrayBuffer if your worker expects binary data
         });
     }
 });
