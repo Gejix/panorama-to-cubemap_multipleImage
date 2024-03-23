@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         worker.onmessage = function(event) {
             const { processedData, face, originalName } = event.data;
             // Add processed data to zip
-            zip.file(`${originalName}_${face}.png`, processedData, {binary: true});
+            zip.file(`${originalName}_${face}.jpeng`, processedData, {binary: true});
 
             processedCount++;
             if (processedCount === totalFaces) {
