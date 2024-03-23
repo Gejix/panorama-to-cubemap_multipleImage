@@ -37,8 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         imageData: imageData,
                         rotation:0,
                         face: face,
+                        interpolation: 'copyPixelLanczos',
                         originalName: file.name.split('.')[0],
-                        operation: 'processFace'
+                        operation: 'processFace',
+                        maxWidth: 1024
                     });
                 });
             };
