@@ -172,10 +172,10 @@ function renderFace({imageData, face, rotation, interpolation, originalName, max
 
     // Select the appropriate pixel copying function based on interpolation method
     const copyPixel = {
-        'linear': copyPixelBilinear,
-        'cubic': copyPixelBicubic,
+        // 'linear': copyPixelBilinear,
+        // 'cubic': copyPixelBicubic,
         'lanczos': copyPixelLanczos,
-        'nearest': copyPixelNearest
+        // 'nearest': copyPixelNearest
     }[interpolation](readData, writeData);
 
     // Process each pixel for the specified face
