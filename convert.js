@@ -51,7 +51,7 @@ function mod(x, n) {
 //   };
 // }
 
-performs a discrete convolution with a provided kernel
+//performs a discrete convolution with a provided kernel
 function kernelResample(read, write, filterSize, kernel) {
   const {width, height, data} = read;
   const readIndex = (x, y) => 4 * (y * width + x);
