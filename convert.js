@@ -161,13 +161,14 @@ function renderFace({imageData, face, rotation, interpolation, originalName, max
 
   maxWidth = maxWidth || 1024; // Define maxWidth directly if it's constant
   const readData = imageData;
-  const faceWidth = Math.min(maxWidth, readData.width / 4);
+  const faceWidth = Math.min(maxWidth, readData.width / 4) || 1;
   const faceHeight = faceWidth;
-  
   const cube = {};
   const orientation = orientations[face];
 
   const writeData = new ImageData(faceWidth, faceHeight);
+
+  console.log(`faceWidth: ${faceWidth}, faceHeight: ${faceHeight}`);
 
     // Select the appropriate pixel copying function based on interpolation method
     const copyPixel = {
