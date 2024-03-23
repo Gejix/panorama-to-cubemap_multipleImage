@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         imageData: imageData,
                         rotation:0,
                         face: face,
-                        interpolation: 'linear',
+                        interpolation: 'lanczos',
                         originalName: file.name.split('.')[0],
                         operation: 'processFace',
                         maxWidth: 1024
