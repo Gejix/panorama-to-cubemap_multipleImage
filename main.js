@@ -1,5 +1,6 @@
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
+let zip = new JSZip(); // Initialize JSZip
 
 class RadioInput {
   constructor(name, onChange) {
@@ -50,16 +51,9 @@ class CubeFace {
     this.anchor.style.top = `${y}px`;
   }
 
-  setDownload(url, fileExtension) {
-    this.anchor.href = url;
-    this.anchor.download = `${this.faceName}.${fileExtension}`;
-    this.img.style.filter = '';
-  }
-}
-
-function removeChildren(node) {
-  while (node.firstChild) {
-    node.removeChild(node.firstChild);
+  // Modified setDownload to add images to the zip file
+  addToZip(blob, fileExtension) {
+    zip.file(`${this.faceName}.${fileExtension}`, blob);
   }
 }
 
@@ -68,12 +62,12 @@ const mimeType = {
   'png': 'image/png'
 };
 
-function getDataURL(imgData, extension) {
+function getDataBlob(imgData, extension) {
   canvas.width = imgData.width;
   canvas.height = imgData.height;
   ctx.putImageData(imgData, 0, 0);
   return new Promise(resolve => {
-    canvas.toBlob(blob => resolve(URL.createObjectURL(blob)), mimeType[extension], 0.92);
+    canvas.toBlob(blob => resolve(blob), mimeType[extension], 0.92);
   });
 }
 
@@ -100,32 +94,11 @@ const facePositions = {
   ny: {x: 1, y: 2}
 };
 
-function loadImage() {
-  const file = dom.imageInput.files[0];
-
-  if (!file) {
-    return;
-  }
-
-  const img = new Image();
-
-  img.src = URL.createObjectURL(file);
-
-  img.addEventListener('load', () => {
-    const {width, height} = img;
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(img, 0, 0);
-    const data = ctx.getImageData(0, 0, width, height);
-
-    processImage(data);
-  });
-}
-
 let finished = 0;
 let workers = [];
 
 function processImage(data) {
+  zip = new JSZip(); // Reset JSZip for new processing
   removeChildren(dom.faces);
   dom.generating.style.visibility = 'visible';
 
@@ -133,6 +106,7 @@ function processImage(data) {
     worker.terminate();
   }
 
+  workers = [];
   for (let [faceName, position] of Object.entries(facePositions)) {
     renderFace(data, faceName, position);
   }
@@ -150,38 +124,26 @@ function renderFace(data, faceName, position) {
   };
 
   const worker = new Worker('convert.js');
+  workers.push(worker);
 
-  const setDownload = ({data: imageData}) => {
+  worker.onmessage = ({data: imageData}) => {
     const extension = settings.format.value;
 
-    getDataURL(imageData, extension)
-      .then(url => face.setDownload(url, extension));
+    getDataBlob(imageData, extension)
+      .then(blob => {
+        face.addToZip(blob, extension);
+        finished++;
 
-    finished++;
-
-    if (finished === 6) {
-      dom.generating.style.visibility = 'hidden';
-      finished = 0;
-      workers = [];
-    }
+        if (finished === Object.keys(facePositions).length) {
+          dom.generating.style.visibility = 'hidden';
+          finished = 0;
+          zip.generateAsync({type:"blob"})
+            .then(function(content) {
+              saveAs(content, "cubemap.zip");
+            });
+        }
+      });
   };
 
-  const setPreview = ({data: imageData}) => {
-    const x = imageData.width * position.x;
-    const y = imageData.height * position.y;
-
-    getDataURL(imageData, 'jpg')
-      .then(url => face.setPreview(url, x, y));
-
-    worker.onmessage = setDownload;
-    worker.postMessage(options);
-  };
-
-  worker.onmessage = setPreview;
-  worker.postMessage(Object.assign({}, options, {
-    maxWidth: 200,
-    interpolation: 'linear',
-  }));
-
-  workers.push(worker);
+  worker.postMessage(options);
 }
