@@ -108,42 +108,42 @@ function loadImage() {
     return;
   }
 
-//   const img = new Image();
+  const img = new Image();
 
-//   img.src = URL.createObjectURL(file);
+  img.src = URL.createObjectURL(file);
 
-//   img.addEventListener('load', () => {
-//     const {width, height} = img;
-//     canvas.width = width;
-//     canvas.height = height;
-//     ctx.drawImage(img, 0, 0);
-//     const data = ctx.getImageData(0, 0, width, height);
+  img.addEventListener('load', () => {
+    const {width, height} = img;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, width, height);
 
-//     processImage(data);
-//   });
-// }
- let processedFiles = 0;
-  const zip = new JSZip();
-
-  for (const file of files) {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.addEventListener('load', () => {
-      const {width, height} = img;
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(img, 0, 0);
-      const data = ctx.getImageData(0, 0, width, height);
-
-      processImage(data, file.name, zip).then(() => {
-        processedFiles++;
-        if (processedFiles === files.length) {
-          finalizeZip(zip);
-        }
-      });
-    });
-  }
+    processImage(data);
+  });
 }
+//  let processedFiles = 0;
+//   const zip = new JSZip();
+
+//   for (const file of files) {
+//     const img = new Image();
+//     img.src = URL.createObjectURL(file);
+//     img.addEventListener('load', () => {
+//       const {width, height} = img;
+//       canvas.width = width;
+//       canvas.height = height;
+//       ctx.drawImage(img, 0, 0);
+//       const data = ctx.getImageData(0, 0, width, height);
+
+//       processImage(data, file.name, zip).then(() => {
+//         processedFiles++;
+//         if (processedFiles === files.length) {
+//           finalizeZip(zip);
+//         }
+//       });
+//     });
+//   }
+// }
 
 function finalizeZip(zip) {
   zip.generateAsync({type:"blob"}).then(function(content) {
@@ -204,8 +204,8 @@ function renderFace(data, faceName, position) {
 
     worker.onmessage = setDownload;
     // worker.postMessage(options);
-    // When posting data to the worker, include an identifier or filename
-    worker.postMessage({ ...options, filename: file.name });
+    When posting data to the worker, include an identifier or filename
+    // worker.postMessage({ ...options, filename: file.name });
 
   };
 
