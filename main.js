@@ -70,6 +70,8 @@ const dom = {
   generating: document.getElementById('generating')
 };
 
+//
+
 const settings = {
   cubeRotation: new Input('cubeRotation', () => processImage()),
   interpolation: new RadioInput('interpolation', () => processImage()),
