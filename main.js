@@ -29,3 +29,11 @@ async function processFile(file) {
     // and then extracting the faces as separate images.
     return []; // Should return an array of objects like { name: 'imageName_face.png', blob: Blob }
 }
+
+const worker = new Worker('convert.js');
+worker.postMessage({ imageData: 'yourImageData', settings: 'yourSettings' });
+
+worker.onmessage = (e) => {
+    console.log(e.data.result); // Handle the processed data
+};
+
