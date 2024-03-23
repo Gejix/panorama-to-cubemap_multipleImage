@@ -195,11 +195,11 @@ function renderFace({imageData, face, rotation, interpolation, originalName}) {
 
 // Event listener for messages from the main thread
 self.addEventListener('message', async (event) => {
-    const { imageData, face, rotation, interpolation, originalName } = event.data;
+    const { imageData, face, rotation, interpolation, originalName, maxWidth} = event.data;
     console.log(`Received request to process face ${face} for ${originalName} with rotation ${rotation}`);
 
     // Call renderFace with all necessary parameters
-    renderFace({ imageData, face, rotation, interpolation, originalName });
+    renderFace({ imageData, face, rotation, interpolation, originalName, maxWidth});
 });
 // onmessage = function({data}) {
 //   renderFace(data);
