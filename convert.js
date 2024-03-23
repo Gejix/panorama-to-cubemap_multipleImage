@@ -7,50 +7,6 @@ function mod(x, n) {
   return ((x % n) + n) % n;
 }
 
-// Pixel copying functions for different interpolation methods
-// function copyPixelNearest(read, write) {
-//   const {width, height, data} = read;
-//   const readIndex = (x, y) => 4 * (y * width + x);
-
-//   return (xFrom, yFrom, to) => {
-
-//     const nearest = readIndex(
-//       clamp(Math.round(xFrom), 0, width - 1),
-//       clamp(Math.round(yFrom), 0, height - 1)
-//     );
-
-//     for (let channel = 0; channel < 3; channel++) {
-//       write.data[to + channel] = data[nearest + channel];
-//     }
-//   };
-// }
-
-// function copyPixelBilinear(read, write) {
-//   const {width, height, data} = read;
-//   const readIndex = (x, y) => 4 * (y * width + x);
-
-//   return (xFrom, yFrom, to) => {
-//     const xl = clamp(Math.floor(xFrom), 0, width - 1);
-//     const xr = clamp(Math.ceil(xFrom), 0, width - 1);
-//     const xf = xFrom - xl;
-
-//     const yl = clamp(Math.floor(yFrom), 0, height - 1);
-//     const yr = clamp(Math.ceil(yFrom), 0, height - 1);
-//     const yf = yFrom - yl;
-
-//     const p00 = readIndex(xl, yl);
-//     const p10 = readIndex(xr ,yl);
-//     const p01 = readIndex(xl, yr);
-//     const p11 = readIndex(xr, yr);
-
-//     for (let channel = 0; channel < 3; channel++) {
-//       const p0 = data[p00 + channel] * (1 - xf) + data[p10 + channel] * xf;
-//       const p1 = data[p01 + channel] * (1 - xf) + data[p11 + channel] * xf;
-//       write.data[to + channel] = Math.ceil(p0 * (1 - yf) + p1 * yf);
-//     }
-//   };
-// }
-
 //performs a discrete convolution with a provided kernel
 function kernelResample(read, write, filterSize, kernel) {
   const {width, height, data} = read;
@@ -94,23 +50,10 @@ function kernelResample(read, write, filterSize, kernel) {
   };
 }
 
-// function copyPixelBicubic(read, write) {
-//   const b = -0.5;
-//   const kernel = x => {
-//     x = Math.abs(x);
-//     const x2 = x*x;
-//     const x3 = x*x*x;
-//     return x <= 1 ?
-//       (b + 2)*x3 - (b + 3)*x2 + 1 :
-//       b*x3 - 5*b*x2 + 8*b*x - 4*b;
-//   };
-
-//   return kernelResample(read, write, 2, kernel);
-// }
-
 function copyPixelLanczos(read, write) {
   const filterSize = 5;
   const kernel = x => {
+    if (isNaN(x)) return 0; // Example safeguard
     if (x === 0) {
       return 1;
     }
