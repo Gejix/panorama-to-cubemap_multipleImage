@@ -9,11 +9,12 @@ function mod(x, n) {
 
 function lanczosKernel(x, a) {
     if (x === 0) return 1;
-    if (x < -a || x > a) return 0;
+    if (Math.abs(x) >= a) return 0;
     const piX = Math.PI * x;
     return a * Math.sin(piX) * Math.sin(piX / a) / (piX * piX);
 }
 
+console.log(`x: ${x}, y: ${y}, width: ${width}, height: ${height}`);
 
 function kernelResample(read, write, filterSize, kernel) {
     const {width, height, data} = read;
@@ -30,6 +31,12 @@ function kernelResample(read, write, filterSize, kernel) {
                     const sampleX = clamp(Math.round(x + kx), 0, width - 1);
                     const sampleY = clamp(Math.round(y + ky), 0, height - 1);
                     const weight = lanczosKernel(Math.sqrt(kx * kx + ky * ky), filterSize);
+
+                    // Check if weight is NaN
+                    if (isNaN(weight)) {
+                        console.error(`Weight is NaN for kx: ${kx}, ky: ${ky}`);
+                        continue; // Skip this iteration
+                    }
 
                     const index = readIndex(sampleX, sampleY);
                     r += data[index] * weight;
