@@ -1,4 +1,3 @@
-// Utility functions
 function clamp(x, min, max) {
   return Math.min(max, Math.max(x, min));
 }
@@ -7,57 +6,119 @@ function mod(x, n) {
   return ((x % n) + n) % n;
 }
 
-function lanczosKernel(x, a) {
-    if (x === 0) return 1;
-    if (Math.abs(x) >= a) return 0;
-    const piX = Math.PI * x;
-    return a * Math.sin(piX) * Math.sin(piX / a) / (piX * piX);
-}
+function copyPixelNearest(read, write) {
+  const {width, height, data} = read;
+  const readIndex = (x, y) => 4 * (y * width + x);
 
-console.log(`x: ${x}, y: ${y}, width: ${width}, height: ${height}`);
+  return (xFrom, yFrom, to) => {
 
-function kernelResample(read, write, filterSize, kernel) {
-    const {width, height, data} = read;
-    const readIndex = (x, y) => 4 * (y * width + x);
-    const a = filterSize; // Lanczos parameter, typically the same as filterSize for simplicity
+    const nearest = readIndex(
+      clamp(Math.round(xFrom), 0, width - 1),
+      clamp(Math.round(yFrom), 0, height - 1)
+    );
 
-    for (let y = 0; y < write.height; y++) {
-        for (let x = 0; x < write.width; x++) {
-            const to = 4 * (y * write.width + x);
-            let r = 0, g = 0, b = 0, a = 0;
-
-            for (let ky = -filterSize; ky <= filterSize; ky++) {
-                for (let kx = -filterSize; kx <= filterSize; kx++) {
-                    const sampleX = clamp(Math.round(x + kx), 0, width - 1);
-                    const sampleY = clamp(Math.round(y + ky), 0, height - 1);
-                    const weight = lanczosKernel(Math.sqrt(kx * kx + ky * ky), filterSize);
-
-                    // Check if weight is NaN
-                    if (isNaN(weight)) {
-                        console.error(`Weight is NaN for kx: ${kx}, ky: ${ky}`);
-                        continue; // Skip this iteration
-                    }
-
-                    const index = readIndex(sampleX, sampleY);
-                    r += data[index] * weight;
-                    g += data[index + 1] * weight;
-                    b += data[index + 2] * weight;
-                    a += data[index + 3] * weight;
-                }
-            }
-
-            write.data[to] = clamp(Math.round(r), 0, 255);
-            write.data[to + 1] = clamp(Math.round(g), 0, 255);
-            write.data[to + 2] = clamp(Math.round(b), 0, 255);
-            write.data[to + 3] = clamp(Math.round(a), 0, 255);
-        }
+    for (let channel = 0; channel < 3; channel++) {
+      write.data[to + channel] = data[nearest + channel];
     }
+  };
 }
 
+function copyPixelBilinear(read, write) {
+  const {width, height, data} = read;
+  const readIndex = (x, y) => 4 * (y * width + x);
+
+  return (xFrom, yFrom, to) => {
+    const xl = clamp(Math.floor(xFrom), 0, width - 1);
+    const xr = clamp(Math.ceil(xFrom), 0, width - 1);
+    const xf = xFrom - xl;
+
+    const yl = clamp(Math.floor(yFrom), 0, height - 1);
+    const yr = clamp(Math.ceil(yFrom), 0, height - 1);
+    const yf = yFrom - yl;
+
+    const p00 = readIndex(xl, yl);
+    const p10 = readIndex(xr ,yl);
+    const p01 = readIndex(xl, yr);
+    const p11 = readIndex(xr, yr);
+
+    for (let channel = 0; channel < 3; channel++) {
+      const p0 = data[p00 + channel] * (1 - xf) + data[p10 + channel] * xf;
+      const p1 = data[p01 + channel] * (1 - xf) + data[p11 + channel] * xf;
+      write.data[to + channel] = Math.ceil(p0 * (1 - yf) + p1 * yf);
+    }
+  };
+}
+
+// performs a discrete convolution with a provided kernel
+function kernelResample(read, write, filterSize, kernel) {
+  const {width, height, data} = read;
+  const readIndex = (x, y) => 4 * (y * width + x);
+
+  const twoFilterSize = 2*filterSize;
+  const xMax = width - 1;
+  const yMax = height - 1;
+  const xKernel = new Array(4);
+  const yKernel = new Array(4);
+
+  return (xFrom, yFrom, to) => {
+    const xl = Math.floor(xFrom);
+    const yl = Math.floor(yFrom);
+    const xStart = xl - filterSize + 1;
+    const yStart = yl - filterSize + 1;
+
+    for (let i = 0; i < twoFilterSize; i++) {
+      xKernel[i] = kernel(xFrom - (xStart + i));
+      yKernel[i] = kernel(yFrom - (yStart + i));
+    }
+
+    for (let channel = 0; channel < 3; channel++) {
+      let q = 0;
+
+      for (let i = 0; i < twoFilterSize; i++) {
+        const y = yStart + i;
+        const yClamped = clamp(y, 0, yMax);
+        let p = 0;
+        for (let j = 0; j < twoFilterSize; j++) {
+          const x = xStart + j;
+          const index = readIndex(clamp(x, 0, xMax), yClamped);
+          p += data[index + channel] * xKernel[j];
+
+        }
+        q += p * yKernel[i];
+      }
+
+      write.data[to + channel] = Math.round(q);
+    }
+  };
+}
+
+function copyPixelBicubic(read, write) {
+  const b = -0.5;
+  const kernel = x => {
+    x = Math.abs(x);
+    const x2 = x*x;
+    const x3 = x*x*x;
+    return x <= 1 ?
+      (b + 2)*x3 - (b + 3)*x2 + 1 :
+      b*x3 - 5*b*x2 + 8*b*x - 4*b;
+  };
+
+  return kernelResample(read, write, 2, kernel);
+}
 
 function copyPixelLanczos(read, write) {
-    const filterSize = 3; // Or another appropriate value
-    kernelResample(read, write, filterSize, (x) => lanczosKernel(x, filterSize));
+  const filterSize = 5;
+  const kernel = x => {
+    if (x === 0) {
+      return 1;
+    }
+    else {
+      const xp = Math.PI * x;
+      return filterSize * Math.sin(xp) * Math.sin(xp / filterSize) / (xp * xp);
+    }
+  };
+
+  return kernelResample(read, write, filterSize, kernel);
 }
 
 const orientations = {
@@ -93,50 +154,45 @@ const orientations = {
   }
 };
 
-// Main function to render a face of the cube
-function renderFace({imageData, face, rotation, interpolation, originalName, maxWidth}) {
+function renderFace({data: readData, face, rotation, interpolation, maxWidth = Infinity}) {
 
-  maxWidth = maxWidth || 1024; // Define maxWidth directly if it's constant
-  const readData = imageData;
-  const faceWidth = Math.min(maxWidth, readData.width / 4) || 1;
+  const faceWidth = Math.min(maxWidth, readData.width / 4);
   const faceHeight = faceWidth;
+
   const cube = {};
   const orientation = orientations[face];
 
   const writeData = new ImageData(faceWidth, faceHeight);
 
-  console.log(`faceWidth: ${faceWidth}, faceHeight: ${faceHeight}`);
+  const copyPixel =
+    interpolation === 'linear' ? copyPixelBilinear(readData, writeData) :
+    interpolation === 'cubic' ? copyPixelBicubic(readData, writeData) :
+    interpolation === 'lanczos' ? copyPixelLanczos(readData, writeData) :
+    copyPixelNearest(readData, writeData);
 
-    // Select the appropriate pixel copying function based on interpolation method
-    const copyPixel = {
-        'lanczos': copyPixelLanczos,
-    }[interpolation](readData, writeData);
+  for (let x = 0; x < faceWidth; x++) {
+    for (let y = 0; y < faceHeight; y++) {
+      const to = 4 * (y * faceWidth + x);
 
-    // Process each pixel for the specified face
-    for (let x = 0; x < faceWidth; x++) {
-        for (let y = 0; y < faceHeight; y++) {
-            const to = 4 * (y * faceWidth + x);
-            writeData.data[to + 3] = 255; // Fill alpha channel
-            orientation(cube, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
-            const r = Math.sqrt(cube.x * cube.x + cube.y * cube.y + cube.z * cube.z);
-            const lon = mod(Math.atan2(cube.y, cube.x) + rotation, 2 * Math.PI);
-            const lat = Math.acos(cube.z / r);
-            copyPixel(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
-        }
+      // fill alpha channel
+      writeData.data[to + 3] = 255;
+
+      // get position on cube face
+      // cube is centered at the origin with a side length of 2
+      orientation(cube, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
+
+      // project cube face onto unit sphere by converting cartesian to spherical coordinates
+      const r = Math.sqrt(cube.x*cube.x + cube.y*cube.y + cube.z*cube.z);
+      const lon = mod(Math.atan2(cube.y, cube.x) + rotation, 2 * Math.PI);
+      const lat = Math.acos(cube.z / r);
+
+      copyPixel(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
     }
-  
-    // After processing, construct the response object
-    const processedData = `Simulated processed data for ${face} of ${originalName}`;
-    self.postMessage({ processedData, face, originalName });
+  }
+
+  postMessage(writeData);
 }
 
-// Event listener for messages from the main thread
-self.addEventListener('message', (event) => {
-    const { imageData, face, rotation, interpolation, originalName, maxWidth} = event.data;
-    console.log(`Received request to process face ${face} for ${originalName} with rotation ${rotation}`);
-
-    // Call renderFace with all necessary parameters
-    renderFace({ imageData, face, rotation, interpolation, originalName, maxWidth});
-});
-
-
+onmessage = function({data}) {
+  renderFace(data);
+};
