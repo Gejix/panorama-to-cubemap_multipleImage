@@ -174,6 +174,7 @@ function renderFace({imageData, face, rotation, interpolation, originalName, max
     const copyPixel = {
         // 'linear': copyPixelBilinear,
         // 'cubic': copyPixelBicubic,
+      
         'lanczos': copyPixelLanczos,
         // 'nearest': copyPixelNearest
     }[interpolation](readData, writeData);
