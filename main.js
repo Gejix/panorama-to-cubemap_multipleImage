@@ -1,21 +1,18 @@
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
-let zip = new JSZip(); // Initialize JSZip
+let zip = new JSZip(); // Initialize JSZip instance at the start of the script
 
 class RadioInput {
   constructor(name, onChange) {
     this.inputs = document.querySelectorAll(`input[name=${name}]`);
-    for (let input of this.inputs) {
+    this.inputs.forEach(input => {
       input.addEventListener('change', onChange);
-    }
+    });
   }
 
   get value() {
-    for (let input of this.inputs) {
-      if (input.checked) {
-        return input.value;
-      }
-    }
+    const selected = Array.from(this.inputs).find(input => input.checked);
+    return selected ? selected.value : null;
   }
 }
 
@@ -34,14 +31,11 @@ class Input {
 class CubeFace {
   constructor(faceName) {
     this.faceName = faceName;
-
-    this.anchor = document.createElement('a');
-    this.anchor.style.position='absolute';
+    this.anchor = document.createElement('div'); // Changed to div for in-document display
+    this.anchor.style.position = 'absolute';
     this.anchor.title = faceName;
-
     this.img = document.createElement('img');
     this.img.style.filter = 'blur(4px)';
-
     this.anchor.appendChild(this.img);
   }
 
@@ -51,7 +45,6 @@ class CubeFace {
     this.anchor.style.top = `${y}px`;
   }
 
-  // Modified setDownload to add images to the zip file
   addToZip(blob, fileExtension) {
     zip.file(`${this.faceName}.${fileExtension}`, blob);
   }
@@ -67,7 +60,7 @@ function getDataBlob(imgData, extension) {
   canvas.height = imgData.height;
   ctx.putImageData(imgData, 0, 0);
   return new Promise(resolve => {
-    canvas.toBlob(blob => resolve(blob), mimeType[extension], 0.92);
+    canvas.toBlob(blob => resolve(blob), mimeType[extension]);
   });
 }
 
@@ -77,12 +70,10 @@ const dom = {
   generating: document.getElementById('generating')
 };
 
-dom.imageInput.addEventListener('change', loadImage);
-
 const settings = {
-  cubeRotation: new Input('cubeRotation', loadImage),
-  interpolation: new RadioInput('interpolation', loadImage),
-  format: new RadioInput('format', loadImage),
+  cubeRotation: new Input('cubeRotation', () => processImage()),
+  interpolation: new RadioInput('interpolation', () => processImage()),
+  format: new RadioInput('format', () => processImage()),
 };
 
 const facePositions = {
@@ -96,29 +87,46 @@ const facePositions = {
 
 let finished = 0;
 let workers = [];
+let imgData = null; // Store the image data globally after loading
 
-function processImage(data) {
-  zip = new JSZip(); // Reset JSZip for new processing
-  removeChildren(dom.faces);
-  dom.generating.style.visibility = 'visible';
+function loadImage() {
+  const file = dom.imageInput.files[0];
+  if (!file) return;
 
-  for (let worker of workers) {
-    worker.terminate();
-  }
-
-  workers = [];
-  for (let [faceName, position] of Object.entries(facePositions)) {
-    renderFace(data, faceName, position);
-  }
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    imgData = ctx.getImageData(0, 0, img.width, img.height);
+    processImage();
+  };
+  img.src = URL.createObjectURL(file);
 }
 
-function renderFace(data, faceName, position) {
-  const face = new CubeFace(faceName);
-  dom.faces.appendChild(face.anchor);
+dom.imageInput.addEventListener('change', loadImage);
 
+function processImage() {
+  if (!imgData) return; // Do not proceed if imgData is not set
+
+  removeChildren(dom.faces);
+  dom.generating.style.visibility = 'visible';
+  zip = new JSZip(); // Reset the JSZip instance
+  finished = 0; // Reset finished counter
+  workers.forEach(worker => worker.terminate()); // Terminate any existing workers
+  workers = []; // Reset the workers array
+
+  Object.entries(facePositions).forEach(([faceName, position]) => {
+    const face = new CubeFace(faceName);
+    dom.faces.appendChild(face.anchor);
+    renderFace(imgData, face, position);
+  });
+}
+
+function renderFace(data, face, position) {
   const options = {
     data: data,
-    face: faceName,
+    face: face.faceName,
     rotation: Math.PI * settings.cubeRotation.value / 180,
     interpolation: settings.interpolation.value,
   };
@@ -128,22 +136,32 @@ function renderFace(data, faceName, position) {
 
   worker.onmessage = ({data: imageData}) => {
     const extension = settings.format.value;
+    getDataBlob(imageData, extension).then(blob => {
+      face.addToZip(blob, extension);
+      finished++;
 
-    getDataBlob(imageData, extension)
-      .then(blob => {
-        face.addToZip(blob, extension);
-        finished++;
+  if (finished === Object.keys(facePositions).length) {
+    // All faces have been processed and added to the zip
+    dom.generating.style.visibility = 'hidden';
 
-        if (finished === Object.keys(facePositions).length) {
-          dom.generating.style.visibility = 'hidden';
-          finished = 0;
-          zip.generateAsync({type:"blob"})
-            .then(function(content) {
-              saveAs(content, "cubemap.zip");
-            });
-        }
+    zip.generateAsync({ type: "blob" })
+      .then(function(content) {
+        // Use FileSaver.js or a similar method to save the ZIP file
+        saveAs(content, "cubemap_images.zip");
+        // Reset for the next use
+        finished = 0;
+        workers.forEach(worker => worker.terminate());
+        workers = [];
       });
-  };
+  }
+});
+};
 
-  worker.postMessage(options);
+worker.postMessage(options);
+}
+
+function removeChildren(node) {
+while (node.firstChild) {
+node.removeChild(node.firstChild);
+}
 }
