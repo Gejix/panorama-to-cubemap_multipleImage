@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 faces.forEach(face => {
                     worker.postMessage({
                         imageData: imageData,
+                        rotation:0,
                         face: face,
                         originalName: file.name.split('.')[0],
                         operation: 'processFace'
