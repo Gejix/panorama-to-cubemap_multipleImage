@@ -196,3 +196,18 @@ function renderFace({data: readData, face, rotation, interpolation, maxWidth = I
 onmessage = function({data}) {
   renderFace(data);
 };
+
+self.addEventListener('message', async (event) => {
+    const { imageData, face, operation, originalName } = event.data;
+
+    // Simulate processing the image data for the specified face
+    console.log(`Received request to process face ${face} for ${originalName} with operation ${operation}`);
+
+    // Placeholder for actual image processing logic
+    const processedData = `Processed data for ${face} of ${originalName}`;
+
+    // After processing, send the data back to the main thread
+    self.postMessage({ processedData, face, originalName, operation });
+});
+
+
