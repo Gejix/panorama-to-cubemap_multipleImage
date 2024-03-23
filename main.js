@@ -1,65 +1,44 @@
 document.addEventListener('DOMContentLoaded', () => {
     const imageInput = document.getElementById('imageInput');
-    const processBtn = document.getElementById('processBtn');
-    const generating = document.getElementById('generating'); // Assuming this is your loading indicator
+    imageInput.addEventListener('change', handleFiles);
 
-    processBtn.addEventListener('click', async () => {
-        const files = imageInput.files;
-        if (files.length === 0) {
-            alert("Please select at least one image.");
-            return;
-        }
-
-        generating.style.visibility = 'visible'; // Show loading indicator
-
+    async function handleFiles() {
+        const files = Array.from(imageInput.files);
         const zip = new JSZip();
+        const worker = new Worker('convert.js');
+
         let processedCount = 0;
+        const totalFaces = files.length * 6; // Assuming 6 faces per cube map
 
-        for (const file of files) {
-            const worker = new Worker('convert.js');
-            worker.onmessage = async (e) => {
-                // Assuming e.data is the processed ImageData for a single face
-                const blob = await getDataURL(e.data, 'png'); // Or 'jpg', based on your settings
-                const baseName = file.name.split('.').slice(0, -1).join('.');
-                // Example: adding "_top" for demonstration, adjust based on actual face logic
-                zip.file(`${baseName}_top.png`, blob);
+        worker.onmessage = function(event) {
+            const { processedData, face, originalName } = event.data;
+            // Add processed data to zip
+            zip.file(`${originalName}_${face}.png`, processedData, {binary: true});
 
-                processedCount++;
-                if (processedCount === files.length * 6) { // Assuming 6 faces per image
-                    const content = await zip.generateAsync({ type: 'blob' });
-                    saveAs(content, 'cubemaps.zip');
-                    generating.style.visibility = 'hidden'; // Hide loading indicator
-                }
-            };
-
-            // Example: Sending the file for processing, adjust based on your actual data needs
-            const imageData = await fileToImageData(file);
-            worker.postMessage({ imageData: imageData, settings: { /* Your settings here */ } });
-        }
-    });
-});
-
-async function fileToImageData(file) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            resolve(ctx.getImageData(0, 0, img.width, img.height));
+            processedCount++;
+            if (processedCount === totalFaces) {
+                // All faces processed, generate zip
+                zip.generateAsync({type: 'blob'}).then(function(content) {
+                    saveAs(content, "cubemaps.zip");
+                });
+            }
         };
-        img.onerror = reject;
-        img.src = URL.createObjectURL(file);
-    });
-}
 
-async function getDataURL(imgData, extension) {
-  canvas.width = imgData.width;
-  canvas.height = imgData.height;
-  ctx.putImageData(imgData, 0, 0);
-  return new Promise(resolve => {
-    canvas.toBlob(blob => resolve(URL.createObjectURL(blob)), mimeType[extension], 0.92);
-  });
-}
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                const faces = ['px', 'nx', 'py', 'ny', 'pz', 'nz'];
+                faces.forEach(face => {
+                    worker.postMessage({
+                        imageData: imageData,
+                        face: face,
+                        originalName: file.name.split('.')[0], // Assuming file name has a single dot for extension
+                        operation: 'processFace'
+                    });
+                });
+            };
+            reader.readAsDataURL(file); // Or readAsArrayBuffer if processing binary data in worker
+        });
+    }
+});
