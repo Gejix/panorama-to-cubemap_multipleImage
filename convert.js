@@ -195,15 +195,12 @@ function renderFace({imageData, face, rotation, interpolation, originalName}) {
 
 // Event listener for messages from the main thread
 self.addEventListener('message', async (event) => {
-    const { imageData, face, operation, originalName } = event.data;
-    console.log(`Received request to process face ${face} for ${originalName} with operation ${operation}`);
-    const processedData = `Processed data for ${face} of ${originalName}`;
+    const { imageData, face, rotation, interpolation, originalName } = event.data;
+    console.log(`Received request to process face ${face} for ${originalName} with rotation ${rotation}`);
 
-    // After processing, send the data back to the main thread
-    self.postMessage({ processedData, face, originalName, operation });
-    renderFace({ imageData, face, rotation, interpolation, originalName }); // Adjust this call according to how you're passing imageData
+    // Call renderFace with all necessary parameters
+    renderFace({ imageData, face, rotation, interpolation, originalName });
 });
-
 // onmessage = function({data}) {
 //   renderFace(data);
 // };
