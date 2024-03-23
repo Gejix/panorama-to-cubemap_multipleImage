@@ -156,7 +156,8 @@ const orientations = {
   }
 };
 
-function renderFace({data: readData, face, rotation, interpolation, maxWidth = Infinity}) {
+// Main function to render a face of the cube
+function renderFace({imageData, face, rotation, interpolation, originalName}) {
 
   const faceWidth = Math.min(maxWidth, readData.width / 4);
   const faceHeight = faceWidth;
@@ -186,15 +187,21 @@ function renderFace({data: readData, face, rotation, interpolation, maxWidth = I
             copyPixel(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
         }
     }
-
-    postMessage(writeData);
+  
+    // After processing, construct the response object
+    const processedData = `Simulated processed data for ${face} of ${originalName}`;
+    self.postMessage({ processedData, face, originalName });
 }
 
 // Event listener for messages from the main thread
 self.addEventListener('message', async (event) => {
     const { imageData, face, operation, originalName } = event.data;
     console.log(`Received request to process face ${face} for ${originalName} with operation ${operation}`);
-    renderFace(imageData); // Adjust this call according to how you're passing imageData
+    const processedData = `Processed data for ${face} of ${originalName}`;
+
+    // After processing, send the data back to the main thread
+    self.postMessage({ processedData, face, originalName, operation });
+    renderFace({ imageData, face, rotation, interpolation, originalName }); // Adjust this call according to how you're passing imageData
 });
 
 // onmessage = function({data}) {
