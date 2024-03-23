@@ -7,63 +7,50 @@ function mod(x, n) {
   return ((x % n) + n) % n;
 }
 
-//performs a discrete convolution with a provided kernel
-function kernelResample(read, write, filterSize, kernel) {
-  const {width, height, data} = read;
-  const readIndex = (x, y) => 4 * (y * width + x);
-
-  const twoFilterSize = 2*filterSize;
-  const xMax = width - 1;
-  const yMax = height - 1;
-  const xKernel = new Array(4);
-  const yKernel = new Array(4);
-
-  return (xFrom, yFrom, to) => {
-    const xl = Math.floor(xFrom);
-    const yl = Math.floor(yFrom);
-    const xStart = xl - filterSize + 1;
-    const yStart = yl - filterSize + 1;
-
-    for (let i = 0; i < twoFilterSize; i++) {
-      xKernel[i] = kernel(xFrom - (xStart + i));
-      yKernel[i] = kernel(yFrom - (yStart + i));
-    }
-
-    for (let channel = 0; channel < 3; channel++) {
-      let q = 0;
-
-      for (let i = 0; i < twoFilterSize; i++) {
-        const y = yStart + i;
-        const yClamped = clamp(y, 0, yMax);
-        let p = 0;
-        for (let j = 0; j < twoFilterSize; j++) {
-          const x = xStart + j;
-          const index = readIndex(clamp(x, 0, xMax), yClamped);
-          p += data[index + channel] * xKernel[j];
-
-        }
-        q += p * yKernel[i];
-      }
-
-      write.data[to + channel] = Math.round(q);
-    }
-  };
+function lanczosKernel(x, a) {
+    if (x === 0) return 1;
+    if (x < -a || x > a) return 0;
+    const piX = Math.PI * x;
+    return a * Math.sin(piX) * Math.sin(piX / a) / (piX * piX);
 }
 
-function copyPixelLanczos(read, write) {
-  const filterSize = 5;
-  const kernel = x => {
-    if (isNaN(x)) return 0; // Example safeguard
-    if (x === 0) {
-      return 1;
-    }
-    else {
-      const xp = Math.PI * x;
-      return filterSize * Math.sin(xp) * Math.sin(xp / filterSize) / (xp * xp);
-    }
-  };
 
-  return kernelResample(read, write, filterSize, kernel);
+function kernelResample(read, write, filterSize, kernel) {
+    const {width, height, data} = read;
+    const readIndex = (x, y) => 4 * (y * width + x);
+    const a = filterSize; // Lanczos parameter, typically the same as filterSize for simplicity
+
+    for (let y = 0; y < write.height; y++) {
+        for (let x = 0; x < write.width; x++) {
+            const to = 4 * (y * write.width + x);
+            let r = 0, g = 0, b = 0, a = 0;
+
+            for (let ky = -filterSize; ky <= filterSize; ky++) {
+                for (let kx = -filterSize; kx <= filterSize; kx++) {
+                    const sampleX = clamp(Math.round(x + kx), 0, width - 1);
+                    const sampleY = clamp(Math.round(y + ky), 0, height - 1);
+                    const weight = lanczosKernel(Math.sqrt(kx * kx + ky * ky), filterSize);
+
+                    const index = readIndex(sampleX, sampleY);
+                    r += data[index] * weight;
+                    g += data[index + 1] * weight;
+                    b += data[index + 2] * weight;
+                    a += data[index + 3] * weight;
+                }
+            }
+
+            write.data[to] = clamp(Math.round(r), 0, 255);
+            write.data[to + 1] = clamp(Math.round(g), 0, 255);
+            write.data[to + 2] = clamp(Math.round(b), 0, 255);
+            write.data[to + 3] = clamp(Math.round(a), 0, 255);
+        }
+    }
+}
+
+
+function copyPixelLanczos(read, write) {
+    const filterSize = 3; // Or another appropriate value
+    kernelResample(read, write, filterSize, (x) => lanczosKernel(x, filterSize));
 }
 
 const orientations = {
