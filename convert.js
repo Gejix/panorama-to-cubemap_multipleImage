@@ -1,3 +1,4 @@
+// Utility functions
 function clamp(x, min, max) {
   return Math.min(max, Math.max(x, min));
 }
@@ -6,6 +7,7 @@ function mod(x, n) {
   return ((x % n) + n) % n;
 }
 
+// Pixel copying functions for different interpolation methods
 function copyPixelNearest(read, write) {
   const {width, height, data} = read;
   const readIndex = (x, y) => 4 * (y * width + x);
@@ -164,50 +166,52 @@ function renderFace({data: readData, face, rotation, interpolation, maxWidth = I
 
   const writeData = new ImageData(faceWidth, faceHeight);
 
-  const copyPixel =
-    interpolation === 'linear' ? copyPixelBilinear(readData, writeData) :
-    interpolation === 'cubic' ? copyPixelBicubic(readData, writeData) :
-    interpolation === 'lanczos' ? copyPixelLanczos(readData, writeData) :
-    copyPixelNearest(readData, writeData);
+    // Select the appropriate pixel copying function based on interpolation method
+    const copyPixel = {
+        'linear': copyPixelBilinear,
+        'cubic': copyPixelBicubic,
+        'lanczos': copyPixelLanczos,
+        'nearest': copyPixelNearest
+    }[interpolation](readData, writeData);
 
-  for (let x = 0; x < faceWidth; x++) {
-    for (let y = 0; y < faceHeight; y++) {
-      const to = 4 * (y * faceWidth + x);
-
-      // fill alpha channel
-      writeData.data[to + 3] = 255;
-
-      // get position on cube face
-      // cube is centered at the origin with a side length of 2
-      orientation(cube, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
-
-      // project cube face onto unit sphere by converting cartesian to spherical coordinates
-      const r = Math.sqrt(cube.x*cube.x + cube.y*cube.y + cube.z*cube.z);
-      const lon = mod(Math.atan2(cube.y, cube.x) + rotation, 2 * Math.PI);
-      const lat = Math.acos(cube.z / r);
-
-      copyPixel(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
+    // Process each pixel for the specified face
+    for (let x = 0; x < faceWidth; x++) {
+        for (let y = 0; y < faceHeight; y++) {
+            const to = 4 * (y * faceWidth + x);
+            writeData.data[to + 3] = 255; // Fill alpha channel
+            orientation(cube, (2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
+            const r = Math.sqrt(cube.x * cube.x + cube.y * cube.y + cube.z * cube.z);
+            const lon = mod(Math.atan2(cube.y, cube.x) + rotation, 2 * Math.PI);
+            const lat = Math.acos(cube.z / r);
+            copyPixel(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
+        }
     }
-  }
 
-  postMessage(writeData);
+    postMessage(writeData);
 }
 
-onmessage = function({data}) {
-  renderFace(data);
-};
-
+// Event listener for messages from the main thread
 self.addEventListener('message', async (event) => {
     const { imageData, face, operation, originalName } = event.data;
-
-    // Simulate processing the image data for the specified face
     console.log(`Received request to process face ${face} for ${originalName} with operation ${operation}`);
-
-    // Placeholder for actual image processing logic
-    const processedData = `Processed data for ${face} of ${originalName}`;
-
-    // After processing, send the data back to the main thread
-    self.postMessage({ processedData, face, originalName, operation });
+    renderFace(imageData); // Adjust this call according to how you're passing imageData
 });
+
+// onmessage = function({data}) {
+//   renderFace(data);
+// };
+
+// self.addEventListener('message', async (event) => {
+//     const { imageData, face, operation, originalName } = event.data;
+
+//     // Simulate processing the image data for the specified face
+//     console.log(`Received request to process face ${face} for ${originalName} with operation ${operation}`);
+
+//     // Placeholder for actual image processing logic
+//     const processedData = `Processed data for ${face} of ${originalName}`;
+
+//     // After processing, send the data back to the main thread
+//     self.postMessage({ processedData, face, originalName, operation });
+// });
 
 
