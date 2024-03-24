@@ -109,6 +109,8 @@ function loadImages() {
         };
         reader.readAsDataURL(file);
     });
+    totalImages = files.length; // Assuming you want progress per image
+    processedImages = 0; // Reset processed images counter
 }
 
 function processImage(imgData, folderName) {
@@ -137,6 +139,10 @@ function renderFace(data, face, position, folderName) {
 
             // Increment the count of completed tasks and check if all tasks are done
             completedTasks++;
+            // After adding face to zip
+            processedImages++; // Increment here if tracking per face
+            const percentage = Math.round((processedImages / totalTasks) * 100); // Use totalTasks if tracking per face
+            updateProgress(percentage);
             if (completedTasks === totalTasks) {
                 generateAndDownloadZip(); // Call function to compile and download ZIP file
             }
