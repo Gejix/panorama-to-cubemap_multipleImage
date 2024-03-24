@@ -133,7 +133,7 @@ function renderFace(data, face, position, folderName) {
 
     worker.onmessage = ({data: imageData}) => {
         const extension = settings.format.value;
-        getDataBlob(imageData, extension).then(blob =>             
+        getDataBlob(imageData, extension).then(blob =>
             face.addToZip(blob, extension, folderName);
 
             // Increment the count of completed tasks and check if all tasks are done
