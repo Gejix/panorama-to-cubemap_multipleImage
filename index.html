@@ -13,17 +13,13 @@
       margin-top: 12px;
       margin-bottom: 12px;
     }
-    #progressBarContainer {
-      width: 100%;
-      background-color: #ddd;
+    #cubemap {
+      width: 800px;
+      height: 600px;
+      position: relative;
+      border: 1px solid #888;
+      background: #eee;
       margin-top: 15px;
-    }
-    #progressBar {
-      width: 0%;
-      height: 20px;
-      background-color: #4CAF50;
-      text-align: center;
-      color: white;
     }
   </style>
 </head>
@@ -35,6 +31,16 @@
   </header>
 
   <main>
+    <section>
+      <h2>Upload</h2>
+      <label>Upload a panoramic image: <input id="imageInput" type="file" accept="image/* multiple"></label>
+      <ul>
+        <li>The image should be formatted with the equirectangular projection.</li>
+        <li>The image should have an aspect ratio of 2:1 (the width must be exactly twice the height).</li>
+      </ul>
+      <p>A cubemap will be generated from your image.</p>
+    </section>
+
     <section class="settings">
       <h2>Settings</h2>
       <div>
@@ -54,19 +60,11 @@
     </section>
 
     <section>
-      <h2>Upload</h2>
-      <label>Upload panoramic images: <input id="imageInput" type="file" accept="image/*" multiple></label>
-      <ul>
-        <li>The image should be formatted with the equirectangular projection.</li>
-        <li>The image should have an aspect ratio of 2:1 (the width must be exactly twice the height).</li>
-      </ul>
-      <p>A cubemap will be generated from your images.</p>
-    </section>
-
-    <section>
       <h2>Output</h2>
-      <div id="progressBarContainer">
-        <div id="progressBar">Generating...</div>
+      <p>Click each cube face to save it to your computer.</p>
+      <div id="cubemap">
+        <b id="generating" style="visibility:hidden">Generating...</b>
+        <output id="faces"></output>
       </div>
     </section>
   </main>
@@ -78,9 +76,7 @@
       <small>Design by <a href="http://motherfuckingwebsite.com/">mf</a></small>
     </p>
   </footer>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
   <script src="main.js"></script>
 </body>
 </html>
