@@ -1,4 +1,3 @@
-//
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
 let zip = new JSZip(); // Initialize a new JSZip instance
