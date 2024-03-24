@@ -88,6 +88,14 @@ let workers = [];
 let totalTasks = 0;
 let completedTasks = 0;
 
+function updateProgressBar() {
+    const progressBarFill = document.getElementById('progressBarFill');
+    const percentage = (completedTasks / totalTasks) * 100;
+    progressBarFill.style.width = percentage + '%';
+    progressBarFill.textContent = Math.round(percentage) + '%';
+}
+
+
 function loadImages() {
     const files = dom.imageInput.files;
     if (files.length === 0) return;
@@ -110,6 +118,7 @@ function loadImages() {
         };
         reader.readAsDataURL(file);
     });
+    updateProgressBar(); // This will set the progress bar to 0% initially
 }
 
 function processImage(imgData, folderName) {
@@ -138,6 +147,7 @@ function renderFace(data, face, position, folderName) {
 
             // Increment the count of completed tasks and check if all tasks are done
             completedTasks++;
+            updateProgressBar(); // Update the progress bar with the new progress
             if (completedTasks === totalTasks) {
                 generateAndDownloadZip(); // Call function to compile and download ZIP file
             }
@@ -168,6 +178,11 @@ function generateAndDownloadZip() {
     totalTasks = 0;
     workers.forEach(worker => worker.terminate()); // Clean up workers
     workers = []; // Clear the array of workers
+
+    // Optionally, reset the progress bar or indicate completion
+    const progressBarFill = document.getElementById('progressBarFill');
+    progressBarFill.style.width = '100%'; // Consider setting to 100% to indicate completion
+    progressBarFill.textContent = 'Completed';
 }
 
 // Add event listener for file input changes
