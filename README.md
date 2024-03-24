@@ -34,7 +34,7 @@ This application is built using the following web technologies:
 
 ## Feedback and Contributions
 
-We welcome your feedback and contributions to the Panorama to Cubemap for Multiple Images project. Feel free to open an issue or pull request on our [GitHub repository](https://github.com/your-github-repo](https://github.com/Gejix/panorama-to-cubemap_multipleImage).
+We welcome your feedback and contributions to the Panorama to Cubemap for Multiple Images project. Feel free to open an issue or pull request on our [GitHub repository]([https://github.com/your-github-repo](https://github.com/Gejix/panorama-to-cubemap_multipleImage]).
 
 ---
 
