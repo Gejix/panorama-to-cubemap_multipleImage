@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="description" content="Convert a 360° panorama to multiple cubemaps.">
-  <title>Panorama to Cubemap Converter</title>
+  <meta name="description" content="Convert a 360° panorama to a cubemap.">
+  <title>Panorama to Cubemap</title>
   <style>
     body {
       margin: 1em auto;
@@ -21,36 +21,24 @@
       background: #eee;
       margin-top: 15px;
     }
-    #progressBar {
-      width: 100%;
-      background-color: #ddd;
-    }
-    #progressBarFill {
-      height: 20px;
-      background-color: #4CAF50;
-      text-align: center;
-      line-height: 20px;
-      color: white;
-      width: 0%; /* Initial width */
-    }
   </style>
 </head>
 
 <body>
   <header>
-    <h1>Panorama to Cubemap for Multiple Images</h1>
+    <h1>Panorama to Cubemap</h1>
     <aside>Convert a 360° panorama to six cube faces.</aside>
   </header>
 
   <main>
     <section>
       <h2>Upload</h2>
-      <label>Upload panoramic images: <input id="imageInput" type="file" accept="image/*" multiple></label>
+      <label>Upload a panoramic image: <input id="imageInput" type="file" accept="image/*"></label>
       <ul>
         <li>The image should be formatted with the equirectangular projection.</li>
         <li>The image should have an aspect ratio of 2:1 (the width must be exactly twice the height).</li>
       </ul>
-      <p>A cubemap will be generated from your images.</p>
+      <p>A cubemap will be generated from your image.</p>
     </section>
 
     <section class="settings">
@@ -73,21 +61,22 @@
 
     <section>
       <h2>Output</h2>
-      <p>Progress:</p>
-      <div id="progressBar"><div id="progressBarFill">0%</div></div>
+      <p>Click each cube face to save it to your computer.</p>
+      <div id="cubemap">
+        <b id="generating" style="visibility:hidden">Generating...</b>
+        <output id="faces"></output>
+      </div>
     </section>
   </main>
 
   <footer>
     <p>
-      <small>By <a href="https://gejix.github.io/GeraldJuwah-Portfolio/">Gerald Juwah</a></small>
+      <small>By <a href="https://github.com/jaxry">Lucas Crane</a></small>
       <br>
-      <small>Design by <a href="https://github.com/Gejix">GEE</a></small>
+      <small>Design by <a href="http://motherfuckingwebsite.com/">mf</a></small>
     </p>
   </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
