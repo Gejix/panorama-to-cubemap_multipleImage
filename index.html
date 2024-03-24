@@ -60,13 +60,21 @@
       </ul>
       <p>A cubemap will be generated from your image.</p>
     </section>
-    
+
+      <!-- New Progress Bar Section -->
+    <section id="progressSection">
+      <h2>Progress</h2>
+      <div id="progressBarContainer" style="width: 100%; background-color: #ddd; margin-top: 15px;">
+        <div id="progressBarFill" style="width: 0%; height: 20px; background-color: #4CAF50; text-align: center; color: white;">0%</div>
+      </div>
+    </section>
+
     <section>
       <h2>Output</h2>
       <div id="progressBarContainer">
         <b id="generating" style="visibility:hidden">Generating...</b>
         <div id="progressBar">Generating...</div>
-        //<output id="faces"></output>
+        <output id="faces"></output>
       </div>
     </section>
 
