@@ -1,69 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="description" content="Convert a 360° panorama to a cubemap.">
-  <title>Panorama to Cubemap</title>
+  <meta name="description" content="Convert multiple 360° panoramas to cubemaps.">
+  <title>Panorama to Cubemap for Multiple Images</title>
   <style>
     body {
       margin: 1em auto;
       max-width: 800px;
+      font-family: Arial, sans-serif;
     }
     .settings > * {
       margin-top: 12px;
       margin-bottom: 12px;
     }
     #cubemap {
-      width: 800px;
-      height: 600px;
+      width: 100%;
+      max-width: 800px;
+      height: auto;
       position: relative;
       border: 1px solid #888;
       background: #eee;
       margin-top: 15px;
+    }
+    footer {
+      margin-top: 20px;
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
   <header>
-    <h1>Panorama to Cubemap</h1>
-    <aside>Convert a 360° panorama to six cube faces.</aside>
+    <h1>Panorama to Cubemap for Multiple Images</h1>
+    <aside>Effortlessly convert multiple 360° panoramas to six cube faces right in your browser.</aside>
   </header>
 
   <main>
     <section>
-      <h2>Upload</h2>
-      <label>Upload a panoramic image: <input id="imageInput" type="file" accept="image/*" multiple></label>
+      <h2>Upload Panoramas</h2>
+      <label>Upload your panoramic images: <input id="imageInput" type="file" accept="image/*" multiple></label>
       <ul>
-        <li>The image should be formatted with the equirectangular projection.</li>
-        <li>The image should have an aspect ratio of 2:1 (the width must be exactly twice the height).</li>
+        <li>Each image should be formatted with the equirectangular projection.</li>
+        <li>Each image should have an aspect ratio of 2:1 (width must be exactly twice the height).</li>
       </ul>
-      <p>A cubemap will be generated from your image.</p>
+      <p>Cubemaps will be generated from your images. You can upload and process multiple panoramas simultaneously.</p>
     </section>
 
     <section class="settings">
-      <h2>Settings</h2>
+      <h2>Adjust Settings</h2>
       <div>
-        <label>Cube Rotation: <input id="cubeRotation" type="number" min="0" max="359" value="180">°</label>
+        <label for="cubeRotation">Cube Rotation: <input id="cubeRotation" type="number" min="0" max="359" value="180">°</label>
       </div>
-      <fieldset title="The resampling algorithm to use when generating the cubemap.">
-        <legend>Interpolation type</legend>
-        <label><input type="radio" name="interpolation" value="lanczos" checked>Lanczos (best but slower)</label>
-        <label><input type="radio" name="interpolation" value="cubic">Cubic (sharper details)</label>
-        <label><input type="radio" name="interpolation" value="linear">Linear (softer details)</label>
+      <fieldset>
+        <legend>Interpolation Type</legend>
+        <label><input type="radio" name="interpolation" value="lanczos" checked>Lanczos (high quality, slower)</label>
+        <label><input type="radio" name="interpolation" value="cubic">Cubic (sharp details)</label>
+        <label><input type="radio" name="interpolation" value="linear">Linear (soft details)</label>
       </fieldset>
       <fieldset>
-        <legend>Output format</legend>
+        <legend>Output Format</legend>
         <label><input type="radio" name="format" value="png" checked>PNG</label>
         <label><input type="radio" name="format" value="jpg">JPEG</label>
       </fieldset>
     </section>
 
     <section>
-      <h2>Output</h2>
-      <p>Click each cube face to save it to your computer.</p>
+      <h2>Generated Cubemaps</h2>
+      <p>The cubemap faces will be displayed here. You can save each face to your computer.</p>
       <div id="cubemap">
-        <b id="generating" style="visibility:hidden">Generating...</b>
+        <b id="generating" style="visibility:hidden">Generating cubemaps...</b>
         <output id="faces"></output>
       </div>
     </section>
@@ -71,16 +77,17 @@
 
   <footer>
     <p>
-      <small>By <a href="https://github.com/jaxry">Lucas Crane</a></small>
+      <small>Created by <a href="https://github.com/jaxry">Lucas Crane</a></small>
       <br>
-      <small>Design by <a href="http://motherfuckingwebsite.com/">mf</a></small>
+      <small>Based on the design by <a href="http://motherfuckingwebsite.com/">Motherfucking Website</a></small>
     </p>
   </footer>
 
+  <!-- JSZip for ZIP file creation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+  <!-- FileSaver for saving files -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-
+  <!-- Main JavaScript file -->
   <script src="main.js"></script>
 </body>
 </html>
