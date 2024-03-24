@@ -109,8 +109,6 @@ function loadImages() {
         };
         reader.readAsDataURL(file);
     });
-    totalImages = files.length; // Assuming you want progress per image
-    processedImages = 0; // Reset processed images counter
 }
 
 function processImage(imgData, folderName) {
@@ -140,10 +138,10 @@ function renderFace(data, face, position, folderName) {
             // Increment the count of completed tasks and check if all tasks are done
             completedTasks++;
             // After adding face to zip
-            processedImages++; // Increment here if tracking per face
-            const percentage = Math.round((processedImages / totalTasks) * 100); // Use totalTasks if tracking per face
-            updateProgress(percentage);
+            updateProgress();
             if (completedTasks === totalTasks) {
+                document.getElementById('generating').style.visibility = 'visible';
+                document.getElementById('generating').textContent = 'Done!'; // Optionally change the message
                 generateAndDownloadZip(); // Call function to compile and download ZIP file
             }
         });
@@ -177,3 +175,11 @@ function generateAndDownloadZip() {
 
 // Add event listener for file input changes
 dom.imageInput.addEventListener('change', loadImages);
+
+// Function to update the progress bar
+function updateProgress() {
+    const progressBarFill = document.getElementById('progressBarFill');
+    const percentage = Math.round((completedTasks / totalTasks) * 100);
+    progressBarFill.style.width = percentage + '%';
+    progressBarFill.textContent = percentage + '%';
+}
