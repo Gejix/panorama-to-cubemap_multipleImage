@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="description" content="Convert a 360° panorama to a cubemap.">
-  <title>Panorama to Cubemap</title>
+  <title>Panorama to Cubemap for Multiple Images</title>
   <style>
     body {
       margin: 1em auto;
@@ -26,8 +26,9 @@
 
 <body>
   <header>
-    <h1>Panorama to Cubemap</h1>
+    <h1>Panorama to Cubemap for Multiple Images</h1>
     <aside>Convert a 360° panorama to six cube faces.</aside>
+    <aside>Converts multiple panorama images and gives back a zip file of the images as a folder containing each of the 6 faces.</aside>
   </header>
 
   <main>
@@ -35,6 +36,7 @@
 
     <section class="settings">
       <h2>Settings</h2>
+      <aside>Set the property of the images.</aside>
       <div>
         <label>Cube Rotation: <input id="cubeRotation" type="number" min="0" max="359" value="180">°</label>
       </div>
@@ -83,14 +85,13 @@
 
   <footer>
     <p>
-      <small>By <a href="https://github.com/jaxry">Lucas Crane</a></small>
+      <small>By <a href="https://github.com/Gejix">Gerald Juwah</a></small>
       <br>
-      <small>Design by <a href="http://motherfuckingwebsite.com/">mf</a></small>
+      <small>Design by <a href="https://gejix.github.io/GeraldJuwah-Portfolio/">GEE</a></small>
     </p>
   </footer>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  
   <script src="main.js"></script>
 </body>
 </html>
