@@ -87,6 +87,30 @@ let workers = [];
 let totalTasks = 0;
 let completedTasks = 0;
 
+// function loadImages() {
+//     const files = dom.imageInput.files;
+//     if (files.length === 0) return;
+//     removeChildren(dom.faces);
+//     zip = new JSZip(); // Reset the JSZip instance for new input
+//     totalTasks = files.length * Object.keys(facePositions).length; // Total images times faces per image
+//     completedTasks = 0; // Reset for new batch
+//     Array.from(files).forEach((file, index) => {
+//         const reader = new FileReader();
+//         reader.onload = function(e) {
+//             const img = new Image();
+//             img.onload = () => {
+//                 canvas.width = img.width;
+//                 canvas.height = img.height;
+//                 ctx.drawImage(img, 0, 0);
+//                 const imgData = ctx.getImageData(0, 0, img.width, img.height);
+//                 processImage(imgData, `image${index + 1}`);
+//             };
+//             img.src = e.target.result;
+//         };
+//         reader.readAsDataURL(file);
+//     });
+// }
+
 function loadImages() {
     const files = dom.imageInput.files;
     if (files.length === 0) return;
@@ -94,7 +118,7 @@ function loadImages() {
     zip = new JSZip(); // Reset the JSZip instance for new input
     totalTasks = files.length * Object.keys(facePositions).length; // Total images times faces per image
     completedTasks = 0; // Reset for new batch
-    Array.from(files).forEach((file, index) => {
+    Array.from(files).forEach((file) => { // Removed 'index' since it's not used anymore
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
@@ -103,7 +127,9 @@ function loadImages() {
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
                 const imgData = ctx.getImageData(0, 0, img.width, img.height);
-                processImage(imgData, `image${index + 1}`);
+                // Use the file name (without extension) as the folder name
+                const folderName = file.name.replace(/\.[^/.]+$/, "");
+                processImage(imgData, folderName);
             };
             img.src = e.target.result;
         };
